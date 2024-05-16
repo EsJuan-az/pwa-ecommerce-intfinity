@@ -1,0 +1,6 @@
+.grey-outline{
+    text-shadow: -1px -1px 0 #eeeeee,
+    1px -1px 0 #eeeeee,
+    -1px 1px 0 #eeeeee,
+    1px 1px 0 #eeeeee
+}
