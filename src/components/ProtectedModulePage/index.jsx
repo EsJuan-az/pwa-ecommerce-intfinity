@@ -17,13 +17,12 @@ const ProtectedModulePage = ({ModulePage, code}) => {
     }, [loading, moduleData]);
   return (
     <section>
-        <h2>Holaaa</h2>
-        <ModulePage module={moduleData}/>
+        <ModulePage module={moduleData} auth={auth}/>
     </section>
   );
 };
 ProtectedModulePage.propTypes = {
-    ModulePage: PropTypes.node,
+    ModulePage: PropTypes.func,
     code: PropTypes.string,
 };
 export default ProtectedModulePage;
