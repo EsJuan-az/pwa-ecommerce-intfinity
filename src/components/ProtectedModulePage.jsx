@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types';
-import useAuth from '../../hooks/useAuth';
+import useAuth from '../hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
 const ProtectedModulePage = ({ModulePage, code}) => {

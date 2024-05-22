@@ -1,8 +1,8 @@
 import { Autocomplete, TextField } from '@mui/material';
-import useAuth from '../../hooks/useAuth';
+import useAuth from '../hooks/useAuth';
 import PropTypes from 'prop-types';
 import { useEffect, useState } from 'react';
-import CategoryService from '../../service/category.service';
+import CategoryService from '../service/category.service';
 const CategorySelect = ({setCategoryId, setCategory}) => {
     const { auth, auth_token } = useAuth();
     const [ categories, setCategories ] = useState(null);

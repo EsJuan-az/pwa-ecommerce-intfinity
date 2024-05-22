@@ -31,7 +31,7 @@ const AuthProvider = ({children}) => {
         UserService.getMe(auth_token)
             .then( result => {
                 if( !result.error ){
-                    return setAuth(result.body);
+                    return setAuth({...result.body, token: auth_token});
                 }
             })
             .catch( err => {

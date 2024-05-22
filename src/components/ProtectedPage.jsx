@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types';
 import {  useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import useAuth from '../../hooks/useAuth';
+import useAuth from '../hooks/useAuth';
 const ProtectedPage = ({ children }) => {
   const { isAuthenticated, isUserLoading} = useAuth();
   const navigate = useNavigate();

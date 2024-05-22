@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types';
-import DashNavbar from '../DashNavbar';
+import DashNavbar from './DashNavbar';
 const DashboardTemplate = ({children}) => {
   return (
     <section className='flex flex-col'>

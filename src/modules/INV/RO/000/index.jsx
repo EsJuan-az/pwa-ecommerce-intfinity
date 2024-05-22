@@ -1,21 +1,36 @@
 import PropTypes from 'prop-types';
-import Typography from '@mui/material/Typography';
-import { Box, Fab, Icon, Modal, FormControl, TextField, Button } from '@mui/material';
-import { useState } from 'react';
-import CategorySelect from '../../../../components/CategorySelect';
-import { Container } from 'postcss';
+import { useContext, useEffect, useState } from 'react';
+import UI from './UI';
+import ProductService from '../../../../service/product.service';
+import { UIContext } from '../../../../context/ui.context';
+
 const Page = ({module, auth}) => {
-  const loading = !module;
+  // Request States.
+  const [ productsLoading, setProductsLoading ] = useState(true);
+  const [ products, setProducts ] = useState(null);
+
+  // UI States.
+  const { handleSnack } = useContext(UIContext);
   const [open, setOpen] = useState(false);
   const handleClose = () => setOpen(false);
   const handleOpen = () => setOpen(true);
+  // Permissions.
   const creationDisabled = !auth?.permissions.includes('product-own-C');
+  const gettingDisabled = !auth?.permissions.includes('product-own-R');
+  const updationDisabled = !auth?.permissions.includes('product-own-U');
+  const deletionDisabled = !auth?.permissions.includes('product-own-D');
+
+  // Product states.
   const [product, setProduct] = useState({
     name: '',
     refer_id: '',
     price: 0,
-    categoryId: null,
-    category: null, 
+    categoryId: undefined,
+    category: undefined,
+    data: {
+      sizes: [],
+      styles: [],
+    },
   });
   const setName = e => setProduct({...product, name: e.target.value});
   const setReferId = e => setProduct({...product, refer_id: e.target.value});
@@ -23,79 +38,130 @@ const Page = ({module, auth}) => {
   const setCategoryId = v => {
     const newProd = {...product};
     newProd.categoryId = v;
-    newProd.category = null;
+    newProd.category = undefined;
     setProduct(newProd);
   };
   const setCategory = v => {
     const newProd = {...product};
     if(v){
       newProd.category = {name: v, proprity: 1, companyId: auth?.auth.companyId};
-      newProd.categoryId = null;
+      newProd.categoryId = undefined;
     }else{
-      newProd.category = null;
+      newProd.category = undefined;
     }
     setProduct(newProd);
   };
+  // Size and Style.
+  const [size, setSize] = useState('');
+  const [style, setStyle] = useState('');
+  const addSize = (size) => {
+    if( product.data.sizes.includes(size.trim().toUpperCase()) || !size.trim()) return;
+    setProduct({
+    ...product,
+    data: {
+      ...product.data,
+      sizes: [...product.data.sizes, size.trim().toUpperCase()],
+    }});
+  };
+  const addStyle = (style) => {
+    if( product.data.styles.includes(style.trim().toLowerCase()) || !style.trim()) return;
+    setProduct({
+      ...product,
+      data: {
+        ...product.data,
+        styles: [...product.data.styles, style.trim().toLowerCase()],
+      },
+    });
+  };
+  const removeSize = (idx) => setProduct({
+    ...product,
+    data: {
+      ...product.data,
+      sizes: product.data.sizes.filter((s, i) => i !== idx),
+    },
+  });
+  const removeStyle = (idx) => setProduct({
+    ...product,
+    data: {
+      ...product.data,
+      styles: product.data.styles.filter((s, i) => i !== idx),
+    },
+  });
+  // Form Product submit.
+  const handleProductSubmit = () => {
+    // Product validation.
+    // Category vs CategoryId.
+    const body = {...product};
+    const alertValues = {
+      severity: 'error',
+      variant: 'filled',
+      duration: 5000,
+    };
+    ProductService.create(auth.token, body)
+      .then(result => {
+        if(result.error || !result.body){
+          alertValues.msg = `No se ha podido crear tu producto`;
+        }else{
+          alertValues.severity = 'success';
+          alertValues.msg = `Tu producto "${body.name}" se ha creado con éxito`;     
+          setProducts([...products, result.body]);     
+        }
+      })
+      .catch(err => {
+        alertValues.msg = `No se ha podido crear tu producto`;
+      })
+      .finally(() => {
+        handleSnack(alertValues);
+      });
+  };
+  // Get products effect.
+  useEffect(() => {
+    if(auth && auth.token){
+      setProductsLoading(true);
+      ProductService.getAll(auth.token)
+      .then(result => {
+        if(!result.error && result.body){
+          setProducts(result.body);
+        }
+      })
+      .finally(() => {
+        setProductsLoading(false);
+      });
+    }
+  }, [auth]);
+  const props = {
+    module,
+    products,
+    // UI.
+    open,
+    handleClose, handleOpen,
+
+    // Permissions.
+    gettingDisabled,
+    creationDisabled,
+    updationDisabled,
+    deletionDisabled,
+
+    //Creation states
+    product,
+    setName,
+    setReferId,
+    setPrice,
+    setCategoryId,
+    setCategory,
+
+    // Style + Size states.
+    style, setStyle,
+    size, setSize,
+    addSize,
+    addStyle,
+    removeSize,
+    removeStyle,
+
+    handleProductSubmit,
+  };
   return (
-    <Box>
-      <Container className='flex'>
-        <Typography variant='h2' className='poppins-bold' color='primary.dark'> 
-          {module?.name}
-        </Typography>
-        <Fab onClick={handleOpen} color="primary" aria-label="add" className=''  disabled={creationDisabled}>
-          <Icon color="primary.light">add</Icon>
-        </Fab>
-      </Container>
-
-
-      <Fab onClick={handleOpen} color="primary" aria-label="add" className='absolute bottom-5 right-5'  disabled={creationDisabled}>
-        <Icon color="primary.light">add</Icon>
-      </Fab>
-      <Modal
-        open={open}
-        onClose={handleClose}
-        aria-labelledby="modal-modal-title"
-        aria-describedby="modal-modal-description"
-      >
-        <Box bgcolor='primary.light' color='primary.dark' className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-3">
-        <Typography variant='h2' className='poppins-bold' color='primary.dark'> 
-          Crear Producto
-       </Typography>
-        <FormControl className="flex flex-col gap-3 !my-3">
-              <TextField id="name" 
-                          label="Nombre" 
-                          variant="outlined" 
-                          color='primary'
-                          required
-                          value={product.name}                    
-                          onChange={setName}
-                          />
-              <TextField id="refer_id" 
-                          label="Codigo" 
-                          variant="outlined" 
-                          color='primary'
-                          required
-                          value={product.refer_id}                    
-                          onChange={setReferId}
-              />
-              <TextField id="price" 
-                           label="Precio" 
-                           variant="outlined" 
-                           color='primary'
-                           required
-                            value={product.price}
-                           onChange={setPrice}
-                />
-       
-                <CategorySelect setCategory={setCategory} setCategoryId={setCategoryId}/>
-                <Button type='submit' variant="contained" color='primary' onClick={() => console.log(product)}>
-                        Añadir
-                </Button>
-        </FormControl>
-        </Box>
-      </Modal>
-
-    </Box>
+    <UI {...props}/>
   );
 };
 Page.propTypes = {
